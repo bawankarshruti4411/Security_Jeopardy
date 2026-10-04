@@ -225,7 +225,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             SECURITY JEOPARDY CONTROLLER
           </h1>
           <p className="text-xs text-slate-400">
-            Faculty: Prof. Firdous Sadaf &middot; SRC: Dr. Snehlata Wankhede
+            Faculty: Prof. Firdous Sadaf &middot; Coordinator: Shruti Bawankar
           </p>
         </div>
 
