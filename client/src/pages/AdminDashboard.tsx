@@ -421,7 +421,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <li>Event: SECURITY JEOPARDY 2026</li>
                 <li>Host: CyberGuardian Club</li>
                 <li>Faculty Coordinator: Prof. Firdous Sadaf</li>
-                <li>SRC Coordinator: Dr. Snehlata Wankhede</li>
+                <li>Club Coordinator: Shruti Bawankar</li>
                 <li>Structure: 10 Online Riddles + 5 Physical Flag Hunts</li>
                 <li>Scoring: 10 pts online, 20 pts physical (hint penalties apply)</li>
                 <li>Meta Completion Passphrase: CYBER</li>
