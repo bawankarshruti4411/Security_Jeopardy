@@ -199,8 +199,8 @@ export const Rules: React.FC<RulesProps> = ({ onNavigate }) => {
         </h3>
         <p>
           In the event of a dispute, system malfunction, or scoring inquiry, the decision of Faculty
-          Coordinator <strong>Prof. Firdous Sadaf</strong> and SRC Coordinator{' '}
-          <strong>Dr. Snehlata Wankhede</strong> will be final.
+          Coordinator <strong>Prof. Firdous Sadaf</strong> and Club Coordinator{' '}
+          <strong>Shruti Bawankar</strong> will be final.
         </p>
 
         <div className="pt-2 flex flex-wrap gap-3">
