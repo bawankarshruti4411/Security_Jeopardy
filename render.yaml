@@ -1,0 +1,25 @@
+# Render Blueprint: one web service serving both the API and the built React client.
+# Database lives on Neon — set DATABASE_URL / DIRECT_URL in the Render dashboard.
+services:
+  - type: web
+    name: security-jeopardy
+    runtime: node
+    plan: free
+    buildCommand: npm run install:all && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "20"
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false

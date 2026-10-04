@@ -1,0 +1,143 @@
+datasource db {
+  provider = "postgresql"
+  url       = env("DATABASE_URL") // Neon: pooled connection string (host contains "-pooler")
+  directUrl = env("DIRECT_URL")   // Neon: direct connection string, used by `prisma db push`
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String   @default("Admin Organizer")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Event {
+  id                         String    @id @default(cuid())
+  name                       String    @default("SECURITY JEOPARDY")
+  status                     String    @default("NOT_STARTED") // NOT_STARTED, RUNNING, PAUSED, ENDED
+  startTime                  DateTime?
+  endTime                    DateTime?
+  durationMinutes            Int       @default(60)
+  remainingSecondsWhenPaused Int?
+  isLeaderboardVisible       Boolean   @default(true)
+  createdAt                  DateTime  @default(now())
+  updatedAt                  DateTime  @updatedAt
+}
+
+model Team {
+  id              String                  @id @default(cuid())
+  teamCode        String                  @unique // SJ-T001, SJ-T002...
+  teamName        String
+  captainName     String
+  email           String
+  passwordHash    String
+  score           Int                     @default(0)
+  onlineScore     Int                     @default(0)
+  physicalScore   Int                     @default(0)
+  completedCount  Int                     @default(0)
+  routeIndex      Int                     @default(0) // 0..4 determines starting route for physical flags
+  metaCompleted   Boolean                 @default(false)
+  metaCompletedAt DateTime?
+  lastSolveAt     DateTime?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  members         TeamMember[]
+  progress        TeamChallengeProgress[]
+  submissions     Submission[]
+  physicalFlags   PhysicalFlag[]
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  name      String
+  createdAt DateTime @default(now())
+
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+}
+
+model Challenge {
+  id               String                  @id @default(cuid())
+  code             String                  @unique // O01..O10, P01..P05
+  title            String
+  type             String                  // ONLINE, PHYSICAL
+  difficulty       String                  // Easy, Medium, Hard
+  description      String                  // Riddle text
+  concept          String                  // Security concept (e.g. FIREWALL, BACKDOOR)
+  answer           String                  // Primary answer
+  acceptedAnswers  String[]                // Allowed normalization variants
+  points           Int                     // 10 for online, 20 for physical
+  hint1            String
+  hint2            String
+  hint1Penalty     Int                     @default(2)
+  hint2Penalty     Int                     @default(3)
+  order            Int                     // 1..10 for online, 1..5 for physical
+  locationClue     String?                 // Clue for physical location
+  locationName     String?                 // E.g. "Fire hose / water equipment area"
+  physicalFragment String?                 // C, Y, B, E, R
+  isActive         Boolean                 @default(true)
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+
+  progress         TeamChallengeProgress[]
+  submissions      Submission[]
+  physicalFlags    PhysicalFlag[]
+}
+
+model TeamChallengeProgress {
+  id           String    @id @default(cuid())
+  teamId       String
+  challengeId  String
+  status       String    @default("LOCKED") // LOCKED, ACTIVE, RIDDLE_SOLVED, COMPLETED, FAILED
+  attempts     Int       @default(0)
+  hint1Used    Boolean   @default(false)
+  hint2Used    Boolean   @default(false)
+  startedAt    DateTime?
+  completedAt  DateTime?
+  pointsEarned Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  team         Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  challenge    Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, challengeId])
+}
+
+model Submission {
+  id              String    @id @default(cuid())
+  teamId          String
+  challengeId     String?
+  submissionType  String    @default("RIDDLE") // RIDDLE, PHYSICAL_FLAG, META
+  submittedAnswer String
+  isCorrect       Boolean
+  feedback        String?
+  createdAt       DateTime  @default(now())
+
+  team            Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  challenge       Challenge? @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+}
+
+model PhysicalFlag {
+  id          String    @id @default(cuid())
+  teamId      String
+  challengeId String
+  flagCode    String    @unique // e.g. P1-SJ-T001-C-47
+  fragment    String    // C, Y, B, E, R
+  isCaptured  Boolean   @default(false)
+  capturedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  team        Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, challengeId])
+}
