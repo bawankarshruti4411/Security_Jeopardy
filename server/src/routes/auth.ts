@@ -248,7 +248,7 @@ router.post('/admin-login', async (req: Request, res: Response) => {
 
     // Fallback: If not in DB yet, check config credentials and upsert
     if (!admin && email.toLowerCase() === config.adminEmail.toLowerCase()) {
-      if (password === config.adminPassword) {
+      if (config.adminPassword && password === config.adminPassword) {
         const hash = await bcrypt.hash(password, 10);
         admin = await prisma.admin.create({
           data: {

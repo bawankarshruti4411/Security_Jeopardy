@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Settings, Lock, Mail, AlertCircle, ArrowRight, Sparkles } from 'lucide-react';
+import { Shield, Settings, Lock, Mail, AlertCircle, ArrowRight } from 'lucide-react';
 
 interface AdminLoginProps {
   onNavigate: (tab: string) => void;
@@ -38,12 +38,6 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onNavigate }) => {
     }
   };
 
-  const fillDefaultAdmin = () => {
-    setEmail('admin@cyberguardian.club');
-    setPassword('AdminJeopardy2026!');
-    setError(null);
-  };
-
   return (
     <div className="max-w-md mx-auto px-4 py-12">
       <div className="p-8 rounded-2xl bg-cyber-surface/90 border border-purple-500/30 shadow-2xl space-y-6">
@@ -75,7 +69,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onNavigate }) => {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@cyberguardian.club"
+              placeholder="admin email"
               className="w-full px-3.5 py-2.5 rounded-xl bg-cyber-card border border-cyber-border focus:border-purple-400 focus:outline-none text-slate-100 text-sm font-sans"
             />
           </div>
@@ -105,17 +99,6 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onNavigate }) => {
           </button>
         </form>
 
-        {/* Quick Demo Pre-fill */}
-        <div className="pt-4 border-t border-cyber-border/70 text-center">
-          <button
-            type="button"
-            onClick={fillDefaultAdmin}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-950/60 hover:bg-purple-900/60 border border-purple-800 text-xs font-mono text-purple-300 transition"
-          >
-            <Sparkles className="w-3 h-3 text-purple-400" />
-            <span>Fill Default Admin Credentials</span>
-          </button>
-        </div>
       </div>
     </div>
   );

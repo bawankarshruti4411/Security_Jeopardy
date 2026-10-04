@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Shield, KeyRound, Lock, AlertCircle, ArrowRight, Sparkles } from 'lucide-react';
+import { Shield, KeyRound, Lock, AlertCircle, ArrowRight } from 'lucide-react';
 
 interface LoginProps {
   onNavigate: (tab: string) => void;
@@ -41,12 +41,6 @@ export const Login: React.FC<LoginProps> = ({ onNavigate }) => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleQuickFill = (code: string) => {
-    setTeamCode(code);
-    setPassword('CyberGuardian2026!');
-    setError(null);
   };
 
   return (
@@ -105,29 +99,6 @@ export const Login: React.FC<LoginProps> = ({ onNavigate }) => {
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
-
-        {/* Quick Demo Pre-fill helper */}
-        <div className="pt-4 border-t border-cyber-border/70 space-y-2">
-          <div className="flex items-center gap-1.5 text-[11px] font-mono text-slate-400">
-            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Fast Evaluation Credentials:</span>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            {['SJ-T001', 'SJ-T002', 'SJ-T003'].map((code) => (
-              <button
-                key={code}
-                type="button"
-                onClick={() => handleQuickFill(code)}
-                className="py-1.5 px-2 rounded-lg bg-cyber-card hover:bg-cyber-surface border border-cyber-border hover:border-cyan-400/50 text-[11px] font-mono text-cyan-300 transition"
-              >
-                {code}
-              </button>
-            ))}
-          </div>
-          <p className="text-[10px] text-slate-400 text-center">
-            Default seeded password: <code className="text-slate-300">CyberGuardian2026!</code>
-          </p>
-        </div>
 
         <div className="text-center pt-2">
           <p className="text-xs text-slate-400">

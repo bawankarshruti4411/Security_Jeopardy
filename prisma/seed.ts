@@ -380,18 +380,28 @@ const DEMO_TEAMS = [
 ];
 
 export async function seedDatabase() {
-  console.log('--- SEEDING SECURITY JEOPARDY DATABASE ---');
+  // Demo teams (with a shared, publicly known password) and the event/submission
+  // reset are for LOCAL TESTING ONLY. They run only when explicitly requested:
+  //   SEED_DEMO_TEAMS=true npm run prisma:seed
+  // A plain `npm run prisma:seed` is safe on the live database: it only
+  // creates/updates the challenges, the admin account and the event record.
+  const seedDemo = process.env.SEED_DEMO_TEAMS === 'true';
 
-  // 1. Seed or Upsert Event (Default to NOT_STARTED for dev testing)
+  console.log('--- SEEDING SECURITY JEOPARDY DATABASE ---');
+  console.log(seedDemo ? 'Mode: DEMO (demo teams + event reset)' : 'Mode: SAFE (no demo teams, event untouched)');
+
+  // 1. Seed or Upsert Event. Only reset an existing event in demo mode.
   const event = await prisma.event.upsert({
     where: { id: 'security-jeopardy-main-event' },
-    update: {
-      status: 'NOT_STARTED',
-      startTime: null,
-      endTime: null,
-      remainingSecondsWhenPaused: null,
-      durationMinutes: 60,
-    },
+    update: seedDemo
+      ? {
+          status: 'NOT_STARTED',
+          startTime: null,
+          endTime: null,
+          remainingSecondsWhenPaused: null,
+          durationMinutes: 60,
+        }
+      : {},
     create: {
       id: 'security-jeopardy-main-event',
       name: 'SECURITY JEOPARDY',
@@ -409,7 +419,8 @@ export async function seedDatabase() {
 
   const admin = await prisma.admin.upsert({
     where: { email: adminEmail },
-    update: { passwordHash: adminHash },
+    // Safe mode never overwrites an existing admin's password
+    update: seedDemo ? { passwordHash: adminHash } : {},
     create: {
       email: adminEmail,
       passwordHash: adminHash,
@@ -437,6 +448,12 @@ export async function seedDatabase() {
     });
   }
   console.log(`Seeded ${PHYSICAL_CHALLENGES.length} physical challenges (P01 - P05).`);
+
+  if (!seedDemo) {
+    console.log('Skipped demo teams (set SEED_DEMO_TEAMS=true to create them for local testing).');
+    console.log('--- DATABASE SEED COMPLETED SUCCESSFULLY ---');
+    return;
+  }
 
   // 5. Seed Demo Teams and their team-specific Physical Flags
   const defaultTeamPassword = await bcrypt.hash('CyberGuardian2026!', 10);

@@ -10,7 +10,9 @@ export const config = {
   port: parseInt(process.env.PORT || '5000', 10),
   jwtSecret: process.env.JWT_SECRET || DEFAULT_JWT_SECRET,
   adminEmail: process.env.ADMIN_EMAIL || 'admin@cyberguardian.club',
-  adminPassword: process.env.ADMIN_PASSWORD || 'AdminJeopardy2026!',
+  // No built-in default in production: the admin must be set via ADMIN_PASSWORD
+  adminPassword:
+    process.env.ADMIN_PASSWORD || (process.env.NODE_ENV === 'production' ? '' : 'AdminJeopardy2026!'),
   nodeEnv: process.env.NODE_ENV || 'development',
   // Comma-separated list of allowed origins; empty = reflect any origin
   corsOrigins: (process.env.CORS_ORIGINS || '')

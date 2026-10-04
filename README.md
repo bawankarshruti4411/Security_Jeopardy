@@ -140,7 +140,7 @@ d:/Security Jeopardy
 │
 ├── prisma/
 │   ├── schema.prisma           # Complete PostgreSQL relational schema
-│   └── seed.ts                 # Full database seed script (15 challenges + teams)
+│   └── seed.ts                 # Seeds 15 challenges + admin (demo teams only with SEED_DEMO_TEAMS=true)
 │
 └── package.json                # Monorepo root orchestration scripts
 ```

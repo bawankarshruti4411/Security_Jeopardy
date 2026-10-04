@@ -14,7 +14,9 @@
     "prisma:push": "npx prisma db push",
     "prisma:seed": "tsx prisma/seed.ts",
     "test": "npm --prefix server test",
-    "install:all": "npm install --include=dev && npm --prefix server install --include=dev && npm --prefix client install --include=dev"
+    "install:all": "npm install --include=dev && npm --prefix server install --include=dev && npm --prefix client install --include=dev",
+    "admin:set-password": "tsx prisma/set-admin-password.ts",
+    "event:reset": "tsx prisma/reset-event.ts"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
