@@ -9,6 +9,37 @@ import { getTeamPhysicalRoute } from '../utils/routesHelper';
 
 const router = Router();
 
+// A route step is "finished" once its flag is captured OR its riddle failed
+// (3 wrong answers). Either way the next step opens — a failed riddle only
+// locks itself.
+const FINISHED_STATUSES = ['COMPLETED', 'FAILED'];
+
+/** Opens the step after `code` in the team's route, if it is still LOCKED. */
+async function unlockNextPhysical(teamId: string, routeIndex: number, code: string): Promise<string | null> {
+  const routeCodes = getTeamPhysicalRoute(routeIndex);
+  const currentIndex = routeCodes.indexOf(code);
+  if (currentIndex === -1 || currentIndex + 1 >= routeCodes.length) return null;
+
+  const nextCode = routeCodes[currentIndex + 1];
+  const nextChallenge = await prisma.challenge.findUnique({ where: { code: nextCode } });
+  if (!nextChallenge) return null;
+
+  const existing = await prisma.teamChallengeProgress.findUnique({
+    where: { teamId_challengeId: { teamId, challengeId: nextChallenge.id } },
+  });
+  if (!existing) {
+    await prisma.teamChallengeProgress.create({
+      data: { teamId, challengeId: nextChallenge.id, status: 'ACTIVE', startedAt: new Date() },
+    });
+  } else if (existing.status === 'LOCKED') {
+    await prisma.teamChallengeProgress.update({
+      where: { id: existing.id },
+      data: { status: 'ACTIVE', startedAt: new Date() },
+    });
+  }
+  return nextCode;
+}
+
 const riddleSubmitSchema = z.object({
   answer: z.string().trim().min(1, 'Answer cannot be empty'),
 });
@@ -74,7 +105,7 @@ router.get('/', requireTeam, async (req: AuthenticatedRequest, res: Response) =>
         const prevCode = routeCodes[stepIndex - 1];
         const prevChallenge = challengeMap.get(prevCode);
         const prevProg = prevChallenge ? progressMap.get(prevChallenge.id) : null;
-        if (prevProg && prevProg.status === 'COMPLETED' && (!prog || prog.status === 'LOCKED')) {
+        if (prevProg && FINISHED_STATUSES.includes(prevProg.status) && (!prog || prog.status === 'LOCKED')) {
           status = 'ACTIVE';
         }
       }
@@ -193,7 +224,7 @@ router.post('/:id/submit-riddle', requireTeam, async (req: AuthenticatedRequest,
                 where: { teamId_challengeId: { teamId, challengeId: prevChallenge.id } },
               })
             : null;
-          if (prevProg && prevProg.status === 'COMPLETED') {
+          if (prevProg && FINISHED_STATUSES.includes(prevProg.status)) {
             canActivate = true;
           }
         }
@@ -270,14 +301,26 @@ router.post('/:id/submit-riddle', requireTeam, async (req: AuthenticatedRequest,
       });
       return;
     } else {
+      // On the final wrong attempt only THIS step is locked; open the next one.
+      let nextUnlocked: string | null = null;
+      if (isFailed) {
+        const team = await prisma.team.findUnique({ where: { id: teamId } });
+        if (team) nextUnlocked = await unlockNextPhysical(teamId, team.routeIndex, challenge.code);
+      }
+
       const remaining = Math.max(0, 3 - newAttemptCount);
+      const failedMessage = nextUnlocked
+        ? `Incorrect answer. Maximum attempts reached — this step is locked. Next step (${nextUnlocked}) is now unlocked.`
+        : 'Incorrect answer. Maximum attempts reached. This step is locked.';
       res.json({
         success: false,
         isCorrect: false,
         error: isFailed
-          ? 'Incorrect answer. Maximum attempts reached.'
+          ? failedMessage
           : `Incorrect answer. Try again. (${remaining} attempt${remaining === 1 ? '' : 's'} remaining)`,
         attemptsRemaining: remaining,
+        isLocked: isFailed,
+        nextUnlocked,
       });
       return;
     }
@@ -337,6 +380,14 @@ router.post('/:id/submit-flag', requireTeam, async (req: AuthenticatedRequest, r
 
     if (progress.status === 'COMPLETED') {
       res.status(400).json({ success: false, error: 'Flag already captured.' });
+      return;
+    }
+
+    if (progress.status === 'FAILED') {
+      res.status(403).json({
+        success: false,
+        error: 'This step is locked: all 3 riddle attempts were used. Continue with your next step.',
+      });
       return;
     }
 
@@ -458,37 +509,7 @@ router.post('/:id/submit-flag', requireTeam, async (req: AuthenticatedRequest, r
     });
 
     // Unlock next physical challenge in rotating route
-    const routeCodes = getTeamPhysicalRoute(updatedTeam.routeIndex);
-    const currentIndex = routeCodes.indexOf(challenge.code as any);
-    let nextChallengeCode: string | null = null;
-
-    if (currentIndex !== -1 && currentIndex + 1 < routeCodes.length) {
-      nextChallengeCode = routeCodes[currentIndex + 1];
-      const nextChallenge = await prisma.challenge.findUnique({
-        where: { code: nextChallengeCode },
-      });
-
-      if (nextChallenge) {
-        await prisma.teamChallengeProgress.upsert({
-          where: {
-            teamId_challengeId: {
-              teamId,
-              challengeId: nextChallenge.id,
-            },
-          },
-          update: {
-            status: 'ACTIVE',
-            startedAt: new Date(),
-          },
-          create: {
-            teamId,
-            challengeId: nextChallenge.id,
-            status: 'ACTIVE',
-            startedAt: new Date(),
-          },
-        });
-      }
-    }
+    const nextChallengeCode = await unlockNextPhysical(teamId, updatedTeam.routeIndex, challenge.code);
 
     const totalCaptured = updatedTeam.physicalFlags.filter((f) => f.isCaptured).length;
     const allCaptured = totalCaptured >= 5;

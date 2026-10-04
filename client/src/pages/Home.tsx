@@ -261,9 +261,9 @@ export const Home: React.FC<HomeProps> = ({ onNavigate, event }) => {
               <div className="text-xs text-cyan-400 font-mono">CyberGuardian Club Mentor</div>
             </div>
             <div className="p-4 rounded-xl bg-cyber-surface/80 border border-cyber-border space-y-1">
-              <div className="text-xs font-mono text-slate-400">SRC Coordinator</div>
-              <div className="text-base font-bold text-slate-100">Dr. Snehlata Wankhede</div>
-              <div className="text-xs text-purple-400 font-mono">Student Research Council</div>
+              <div className="text-xs font-mono text-slate-400">Club Coordinator</div>
+              <div className="text-base font-bold text-slate-100">Shruti Bawankar</div>
+              <div className="text-xs text-purple-400 font-mono">CyberGuardian Club Coordinator</div>
             </div>
           </div>
           <div className="pt-2">

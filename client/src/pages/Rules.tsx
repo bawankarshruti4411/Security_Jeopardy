@@ -115,9 +115,10 @@ export const Rules: React.FC<RulesProps> = ({ onNavigate }) => {
             <div className="space-y-1">
               <div className="font-bold">Three-Strike Lockout Policy:</div>
               <p>
-                If a team exhausts all 3 incorrect attempts for an online riddle, the challenge will
-                be permanently marked as <strong>FAILED (0 points)</strong>. Only that riddle is
-                locked; the next riddle unlocks so you can keep playing. Verify your spelling!
+                If a team exhausts all 3 incorrect attempts for a riddle (online or physical), that
+                challenge will be permanently marked as <strong>FAILED (0 points)</strong>. Only
+                that riddle is locked; the next riddle or route step unlocks so you can keep
+                playing. Verify your spelling!
               </p>
             </div>
           </div>
@@ -199,8 +200,8 @@ export const Rules: React.FC<RulesProps> = ({ onNavigate }) => {
         </h3>
         <p>
           In the event of a dispute, system malfunction, or scoring inquiry, the decision of Faculty
-          Coordinator <strong>Prof. Firdous Sadaf</strong> and SRC Coordinator{' '}
-          <strong>Dr. Snehlata Wankhede</strong> will be final.
+          Coordinator <strong>Prof. Firdous Sadaf</strong> and Club Coordinator{' '}
+          <strong>Shruti Bawankar</strong> will be final.
         </p>
 
         <div className="pt-2 flex flex-wrap gap-3">

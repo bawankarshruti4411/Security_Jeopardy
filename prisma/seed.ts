@@ -413,7 +413,7 @@ export async function seedDatabase() {
     create: {
       email: adminEmail,
       passwordHash: adminHash,
-      name: 'Dr. Snehlata Wankhede & Prof. Firdous Sadaf (Admin)',
+      name: 'Shruti Bawankar & Prof. Firdous Sadaf (Admin)',
     },
   });
   console.log(`Admin account seeded: ${admin.email}`);

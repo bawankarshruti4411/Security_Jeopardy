@@ -4,7 +4,7 @@
 
 Organized by: **CyberGuardian Club**  
 Faculty Coordinator: **Prof. Firdous Sadaf**  
-SRC Coordinator: **Dr. Snehlata Wankhede**  
+Club Coordinator: **Shruti Bawankar**  
 
 ---
 
@@ -101,7 +101,7 @@ to achieve full mission completion.
 ## 🔒 Competition Integrity & Security Rules
 
 1. **Anti-Poaching Isolation:** Physical flags have team-specific signatures (`P[Step]-SJ-T[Num]-[Frag]-[Digits]`). Attempting to submit another team's flag is blocked and logged.
-2. **Three-Strike Lockout:** Teams get 3 attempts per riddle. On the 3rd failed attempt, that challenge permanently locks as `FAILED (0 pts)`; the next online riddle still unlocks.
+2. **Three-Strike Lockout:** Teams get 3 attempts per riddle. On the 3rd failed attempt, that challenge permanently locks as `FAILED (0 pts)`; the next online riddle / physical route step still unlocks. (A failed physical step means that fragment can't be captured, so the Final Meta Mission is no longer reachable for that team.)
 3. **Rate Limiting:** Express API rate limiters prevent brute force automated submission scripts.
 4. **Server Authoritative Timer:** Countdown is computed strictly on the backend. No submissions are accepted when the event is `PAUSED`, `ENDED`, or `NOT_STARTED`.
 5. **Classified Leaderboard:** Administrators can toggle the scoreboard to "Classified" during the final minutes to build suspense before the awards ceremony.

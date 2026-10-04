@@ -37,8 +37,8 @@ export const Footer: React.FC = () => {
                 <div className="font-semibold text-slate-200">Prof. Firdous Sadaf</div>
               </div>
               <div className="p-2 rounded-lg bg-cyber-card/60 border border-cyber-border/70">
-                <div className="text-[11px] text-slate-400 font-mono">SRC Coordinator</div>
-                <div className="font-semibold text-slate-200">Dr. Snehlata Wankhede</div>
+                <div className="text-[11px] text-slate-400 font-mono">Club Coordinator</div>
+                <div className="font-semibold text-slate-200">Shruti Bawankar</div>
               </div>
             </div>
           </div>

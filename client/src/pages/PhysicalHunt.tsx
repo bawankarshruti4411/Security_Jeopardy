@@ -18,6 +18,7 @@ import {
   Lightbulb,
   Award,
   RefreshCw,
+  XCircle,
 } from 'lucide-react';
 
 interface PhysicalHuntProps {
@@ -339,6 +340,7 @@ export const PhysicalHunt: React.FC<PhysicalHuntProps> = ({ onNavigate, event })
             const isCompleted = step.status === 'COMPLETED';
             const isRiddleSolved = step.status === 'RIDDLE_SOLVED' || isCompleted;
             const isLocked = step.status === 'LOCKED';
+            const isFailed = step.status === 'FAILED';
 
             return (
               <button
@@ -356,6 +358,8 @@ export const PhysicalHunt: React.FC<PhysicalHuntProps> = ({ onNavigate, event })
                     ? 'bg-purple-950/40 border-purple-400 shadow-glow-violet'
                     : isCompleted
                     ? 'bg-emerald-950/20 border-emerald-500/30 hover:border-emerald-400'
+                    : isFailed
+                    ? 'bg-rose-950/20 border-rose-500/30 opacity-70 hover:border-rose-400'
                     : isLocked
                     ? 'bg-cyber-surface/40 border-cyber-border/30 opacity-40 cursor-not-allowed'
                     : 'bg-cyber-card border-cyber-border hover:border-purple-400/50'
@@ -365,6 +369,8 @@ export const PhysicalHunt: React.FC<PhysicalHuntProps> = ({ onNavigate, event })
                   <span className="font-bold text-purple-400">STEP {idx + 1}</span>
                   {isCompleted ? (
                     <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  ) : isFailed ? (
+                    <XCircle className="w-4 h-4 text-rose-400" />
                   ) : isLocked ? (
                     <Lock className="w-3.5 h-3.5 text-slate-500" />
                   ) : (
@@ -381,6 +387,8 @@ export const PhysicalHunt: React.FC<PhysicalHuntProps> = ({ onNavigate, event })
                     <span className="text-emerald-400 font-semibold">
                       Fragment [{step.fragment}]
                     </span>
+                  ) : isFailed ? (
+                    <span className="text-rose-400 font-semibold">Failed &bull; 0 pts</span>
                   ) : isRiddleSolved ? (
                     <span className="text-amber-400">Riddle Solved &bull; Locate</span>
                   ) : isLocked ? (
@@ -419,6 +427,8 @@ export const PhysicalHunt: React.FC<PhysicalHuntProps> = ({ onNavigate, event })
                   ? 'CAPTURED'
                   : activeStep.status === 'RIDDLE_SOLVED'
                   ? 'HUNT IN PROGRESS'
+                  : activeStep.status === 'FAILED'
+                  ? 'FAILED'
                   : 'SOLVE RIDDLE'}
               </span>
             </div>
@@ -444,7 +454,17 @@ export const PhysicalHunt: React.FC<PhysicalHuntProps> = ({ onNavigate, event })
             </p>
 
             {/* Riddle Submission Form (if not solved) */}
-            {!activeStep.isRiddleSolved && (
+            {activeStep.status === 'FAILED' && (
+              <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center gap-2.5 text-rose-300 font-mono text-xs">
+                <XCircle className="w-4 h-4 shrink-0" />
+                <span>
+                  <strong>ATTEMPTS EXHAUSTED:</strong> This step is locked (0 pts). Continue with
+                  the next step on your route.
+                </span>
+              </div>
+            )}
+
+            {!activeStep.isRiddleSolved && activeStep.status !== 'FAILED' && (
               <form onSubmit={handleSubmitRiddle} className="space-y-3 pt-2">
                 <div className="flex items-center justify-between text-xs font-mono text-slate-300">
                   <span>Enter Riddle Answer:</span>

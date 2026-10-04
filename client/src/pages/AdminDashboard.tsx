@@ -225,7 +225,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             SECURITY JEOPARDY CONTROLLER
           </h1>
           <p className="text-xs text-slate-400">
-            Faculty: Prof. Firdous Sadaf &middot; SRC: Dr. Snehlata Wankhede
+            Faculty: Prof. Firdous Sadaf &middot; Coordinator: Shruti Bawankar
           </p>
         </div>
 
@@ -261,11 +261,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <button
             onClick={handleToggleLeaderboard}
             disabled={actionLoading}
-            className={`px-4 py-2 rounded-xl font-mono text-xs font-bold border flex items-center gap-2 transition ${
-              event?.isLeaderboardVisible
+            className={`px-4 py-2 rounded-xl font-mono text-xs font-bold border flex items-center gap-2 transition ${event?.isLeaderboardVisible
                 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/20'
                 : 'bg-amber-500/10 text-amber-400 border-amber-500/40 hover:bg-amber-500/20'
-            }`}
+              }`}
           >
             {event?.isLeaderboardVisible ? (
               <>
@@ -394,11 +393,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-t-xl font-mono text-xs font-bold transition ${
-                isActive
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-t-xl font-mono text-xs font-bold transition ${isActive
                   ? 'bg-cyber-surface text-purple-300 border-t border-x border-purple-500/40'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-cyber-card/50'
-              }`}
+                }`}
             >
               <Icon className="w-3.5 h-3.5" />
               <span>{tab.label}</span>
@@ -421,7 +419,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <li>Event: SECURITY JEOPARDY 2026</li>
                 <li>Host: CyberGuardian Club</li>
                 <li>Faculty Coordinator: Prof. Firdous Sadaf</li>
-                <li>SRC Coordinator: Dr. Snehlata Wankhede</li>
+                <li>Club Coordinator: Shruti Bawankar</li>
                 <li>Structure: 10 Online Riddles + 5 Physical Flag Hunts</li>
                 <li>Scoring: 10 pts online, 20 pts physical (hint penalties apply)</li>
                 <li>Meta Completion Passphrase: CYBER</li>
@@ -543,9 +541,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 {submissionsData.map((sub) => (
                   <tr
                     key={sub.id}
-                    className={`hover:bg-cyber-card/40 ${
-                      sub.feedback?.includes('Cross-team') ? 'bg-rose-950/20' : ''
-                    }`}
+                    className={`hover:bg-cyber-card/40 ${sub.feedback?.includes('Cross-team') ? 'bg-rose-950/20' : ''
+                      }`}
                   >
                     <td className="py-3 px-3 text-slate-400">
                       {new Date(sub.createdAt).toLocaleTimeString()}
@@ -617,11 +614,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <td className="py-3 px-3 font-bold text-white">{c.title}</td>
                     <td className="py-3 px-3">
                       <span
-                        className={`px-2 py-0.5 rounded text-[10px] ${
-                          c.type === 'ONLINE'
+                        className={`px-2 py-0.5 rounded text-[10px] ${c.type === 'ONLINE'
                             ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30'
                             : 'bg-purple-500/10 text-purple-400 border border-purple-500/30'
-                        }`}
+                          }`}
                       >
                         {c.type}
                       </span>
@@ -633,11 +629,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <td className="py-3 px-3 text-right">
                       <button
                         onClick={() => handleToggleChallenge(c.id)}
-                        className={`px-2 py-1 rounded text-[10px] font-bold transition ${
-                          c.isActive
+                        className={`px-2 py-1 rounded text-[10px] font-bold transition ${c.isActive
                             ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
                             : 'bg-rose-500/20 text-rose-400 hover:bg-rose-500/30'
-                        }`}
+                          }`}
                       >
                         {c.isActive ? 'ACTIVE' : 'DISABLED'}
                       </button>
