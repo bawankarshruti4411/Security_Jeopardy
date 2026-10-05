@@ -55,39 +55,6 @@ Club Coordinator: **Shruti Bawankar**
 [ 07: META ]    Assemble all 5 fragments into the master keyword: "CYBER"
 ```
 
----
-
-## 📚 Challenge Directory
-
-### 10 Online Cybersecurity Challenges (10 pts each)
-
-| Code | Title | Difficulty | Concept | Primary Answer | Accepted Variants |
-|:---:|:---|:---:|:---:|:---:|:---|
-| **O01** | FIREWALL | Easy | Network Defense | `FIREWALL` | `A FIREWALL`, `FIRE WALL` |
-| **O02** | DNS | Easy | Name Resolution | `DNS` | `DOMAIN NAME SYSTEM`, `DOMAIN NAME SERVER` |
-| **O03** | PHISHING | Easy | Social Engineering | `PHISHING` | `PHISHING ATTACK`, `SPEAR PHISHING` |
-| **O04** | WORM | Medium | Self-Replicating Malware | `WORM` | `COMPUTER WORM`, `NETWORK WORM` |
-| **O05** | CREDENTIAL STUFFING | Medium | Identity Exploit | `CREDENTIAL STUFFING` | `CREDENTIAL STUFF`, `PASSWORD REUSE` |
-| **O06** | KEYLOGGER | Medium | Surveillance Spyware | `KEYLOGGER` | `KEYSTROKE LOGGER`, `KEY LOGGING` |
-| **O07** | MAN IN THE MIDDLE | Medium | Traffic Interception | `MAN IN THE MIDDLE` | `MITM`, `MITM ATTACK` |
-| **O08** | BACKDOOR | Hard | Covert Access | `BACKDOOR` | `BACK DOOR`, `TRAPDOOR` |
-| **O09** | ZERO DAY | Hard | Unpatched Vulnerability | `ZERO DAY` | `0DAY`, `0-DAY`, `ZERO-DAY` |
-| **O10** | HONEYPOT | Hard | Deception Mechanism | `HONEYPOT` | `HONEY POT`, `HONEY NET` |
-
----
-
-### 5 Physical Flag Hunts (20 pts each)
-
-| Code | Challenge Name | Riddle Answer | Target Campus Location | Fragment | Flag Format Pattern |
-|:---:|:---|:---:|:---|:---:|:---|
-| **P01** | WATER WARRIOR | `BACKDOOR` | Fire hose / water equipment area | **C** | `P1-[TEAM_CODE]-C-[RANDOM]` |
-| **P02** | THE SILENT ALARM | `LOGIC BOMB` | Fire alarm station | **Y** | `P2-[TEAM_CODE]-Y-[RANDOM]` |
-| **P03** | THE GATEKEEPER | `AUTHENTICATION` | Lab entrance / Door handle | **B** | `P3-[TEAM_CODE]-B-[RANDOM]` |
-| **P04** | THE CIPHER RAIL | `ENCRYPTION` | Main staircase wooden railing | **E** | `P4-[TEAM_CODE]-E-[RANDOM]` |
-| **P05** | THE NETWORK ENDPOINT | `PORT` | Wall-mounted network switch / cable endpoint | **R** | `P5-[TEAM_CODE]-R-[RANDOM]` |
-
----
-
 ### Final Meta Cipher Mission
 
 Once a squad captures all 5 physical flags, the fragments:
