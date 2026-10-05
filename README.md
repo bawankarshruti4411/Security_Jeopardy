@@ -50,9 +50,9 @@ Club Coordinator: **Shruti Bawankar**
        ↓
 [ 05: RETURN ]  Safely return to station without alerting rival teams
        ↓
-[ 06: SUBMIT ]  Submit flag code to capture fragment (C, Y, B, E, R)
+[ 06: SUBMIT ]  Submit flag code to capture fragment
        ↓
-[ 07: META ]    Assemble all 5 fragments into the master keyword: "CYBER"
+[ 07: META ]    Assemble all 5 fragments into the master keyword
 ```
 
 ### Final Meta Cipher Mission
