@@ -65,7 +65,7 @@ export const Home: React.FC<HomeProps> = ({ onNavigate, event }) => {
     {
       num: '06',
       title: 'SUBMIT',
-      desc: 'Submit the flag code to capture the fragment (C-Y-B-E-R) and unlock the ultimate meta cipher!',
+      desc: 'Submit the flag code to capture the fragment and unlock the ultimate meta cipher!',
       icon: CheckCircle2,
       color: 'from-amber-500/20 to-emerald-500/20 text-emerald-400 border-emerald-500/30',
     },
