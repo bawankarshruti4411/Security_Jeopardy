@@ -64,7 +64,7 @@ export const Rules: React.FC<RulesProps> = ({ onNavigate }) => {
             FINAL META CIPHER
           </div>
           <p className="text-xs text-slate-300">
-            Collect all 5 secret fragments (C, Y, B, E, R) to unlock and solve the final master
+            Collect all 5 secret fragments to unlock and solve the final master
             keyword.
           </p>
         </div>
