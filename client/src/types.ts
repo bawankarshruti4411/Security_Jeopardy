@@ -23,6 +23,8 @@ export interface TeamProfile {
   onlineScore: number;
   physicalScore: number;
   metaCompleted: boolean;
+  violationCount?: number;
+  isLocked?: boolean;
   members: string[];
 }
 

@@ -121,6 +121,15 @@ export const Rules: React.FC<RulesProps> = ({ onNavigate }) => {
                 playing. Verify your spelling!
               </p>
             </div>
+            <div className="space-y-1">
+              <div className="font-bold">Competition Mode (No Tab Switching):</div>
+              <p>
+                Once the event starts, the platform runs in fullscreen. Switching tabs, apps or
+                windows, or pressing Esc to leave fullscreen, is logged as a violation. After{' '}
+                <strong>3 violations</strong> your team is locked out of submitting until an
+                organizer unlocks you.
+              </p>
+            </div>
           </div>
         </div>
       </section>

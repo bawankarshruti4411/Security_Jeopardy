@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
+import { CompetitionGuard } from './components/CompetitionGuard';
 import { Home } from './pages/Home';
 import { Rules } from './pages/Rules';
 import { Register } from './pages/Register';
@@ -67,11 +68,13 @@ const MainApp: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-cyber-bg text-slate-100 font-sans selection:bg-cyan-500 selection:text-black">
-      <Navbar currentTab={currentTab} onNavigate={setCurrentTab} event={event} />
-      <main className="flex-1">{renderContent()}</main>
-      <Footer />
-    </div>
+    <CompetitionGuard event={event}>
+      <div className="min-h-screen flex flex-col bg-cyber-bg text-slate-100 font-sans selection:bg-cyan-500 selection:text-black">
+        <Navbar currentTab={currentTab} onNavigate={setCurrentTab} event={event} />
+        <main className="flex-1">{renderContent()}</main>
+        <Footer />
+      </div>
+    </CompetitionGuard>
   );
 };
 

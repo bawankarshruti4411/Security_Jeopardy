@@ -1,7 +1,9 @@
 import { Router, Response } from 'express';
 import { z } from 'zod';
+import { Challenge } from '@prisma/client';
 import { prisma } from '../prisma';
 import { requireTeam } from '../middleware/auth';
+import { requireUnlockedTeam } from './integrity';
 import { AuthenticatedRequest } from '../types';
 import { getActiveEvent, computeEventSummary } from '../utils/eventHelper';
 import { isAnswerCorrect, normalizeAnswer } from '../utils/answerChecker';
@@ -51,6 +53,42 @@ const flagSubmitSchema = z.object({
 const metaSubmitSchema = z.object({
   answer: z.string().trim().min(1, 'Meta answer cannot be empty'),
 });
+
+/**
+ * Returns the team's progress for a physical step, activating it if it is the
+ * first step of the team's route or the previous step is finished.
+ */
+async function getUnlockedPhysicalProgress(teamId: string, challenge: Challenge) {
+  let progress = await prisma.teamChallengeProgress.findUnique({
+    where: { teamId_challengeId: { teamId, challengeId: challenge.id } },
+  });
+  if (progress && progress.status !== 'LOCKED') return progress;
+
+  const team = await prisma.team.findUnique({ where: { id: teamId } });
+  if (!team) return progress;
+
+  const routeCodes = getTeamPhysicalRoute(team.routeIndex);
+  const stepIndex = routeCodes.indexOf(challenge.code);
+  let canActivate = stepIndex === 0;
+  if (stepIndex > 0) {
+    const prevChallenge = await prisma.challenge.findUnique({ where: { code: routeCodes[stepIndex - 1] } });
+    const prevProg = prevChallenge
+      ? await prisma.teamChallengeProgress.findUnique({
+          where: { teamId_challengeId: { teamId, challengeId: prevChallenge.id } },
+        })
+      : null;
+    canActivate = !!prevProg && FINISHED_STATUSES.includes(prevProg.status);
+  }
+
+  if (canActivate) {
+    progress = await prisma.teamChallengeProgress.upsert({
+      where: { teamId_challengeId: { teamId, challengeId: challenge.id } },
+      update: { status: 'ACTIVE', startedAt: new Date() },
+      create: { teamId, challengeId: challenge.id, status: 'ACTIVE', startedAt: new Date() },
+    });
+  }
+  return progress;
+}
 
 // GET /api/physical - Get physical challenges according to team's rotating route
 router.get('/', requireTeam, async (req: AuthenticatedRequest, res: Response) => {
@@ -170,7 +208,71 @@ router.get('/', requireTeam, async (req: AuthenticatedRequest, res: Response) =>
 });
 
 // POST /api/physical/:id/submit-riddle - Solve online riddle for physical challenge
-router.post('/:id/submit-riddle', requireTeam, async (req: AuthenticatedRequest, res: Response) => {
+// POST /api/physical/:id/hint - Reveal Hint 1 or Hint 2 for a physical riddle.
+// Penalties are deducted from the 20 points when the flag is captured.
+router.post('/:id/hint', requireUnlockedTeam, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const teamId = req.user!.id;
+
+    const eventSummary = computeEventSummary(await getActiveEvent());
+    if (!eventSummary.canSubmit) {
+      res.status(400).json({ success: false, error: `Action forbidden. Event is ${eventSummary.status}.` });
+      return;
+    }
+
+    const hintNumber = req.body?.hintNumber;
+    if (hintNumber !== 1 && hintNumber !== 2) {
+      res.status(400).json({ success: false, error: 'hintNumber must be 1 or 2' });
+      return;
+    }
+
+    const challenge = await prisma.challenge.findFirst({
+      where: {
+        type: 'PHYSICAL',
+        isActive: true,
+        OR: [{ id: req.params.id }, { code: req.params.id.toUpperCase() }],
+      },
+    });
+    if (!challenge) {
+      res.status(404).json({ success: false, error: 'Physical challenge not found.' });
+      return;
+    }
+
+    const progress = await getUnlockedPhysicalProgress(teamId, challenge);
+    // Hints only help with the riddle, so they are only available while it is unsolved
+    if (!progress || progress.status !== 'ACTIVE') {
+      res.status(400).json({
+        success: false,
+        error: progress?.status === 'LOCKED' || !progress
+          ? 'This step is not unlocked yet.'
+          : 'Hints are only available while the riddle is unsolved.',
+      });
+      return;
+    }
+    if (hintNumber === 2 && !progress.hint1Used) {
+      res.status(400).json({ success: false, error: 'You must reveal Hint 1 before Hint 2.' });
+      return;
+    }
+
+    const updated = await prisma.teamChallengeProgress.update({
+      where: { id: progress.id },
+      data: hintNumber === 1 ? { hint1Used: true } : { hint2Used: true },
+    });
+
+    res.json({
+      success: true,
+      hintNumber,
+      hintText: hintNumber === 1 ? challenge.hint1 : challenge.hint2,
+      hint1Used: updated.hint1Used,
+      hint2Used: updated.hint2Used,
+    });
+  } catch (err: any) {
+    console.error('Physical hint error:', err);
+    res.status(500).json({ success: false, error: 'Failed to unlock hint.' });
+  }
+});
+
+router.post('/:id/submit-riddle', requireUnlockedTeam, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const teamId = req.user!.id;
     const challengeId = req.params.id;
@@ -204,40 +306,7 @@ router.post('/:id/submit-riddle', requireTeam, async (req: AuthenticatedRequest,
       return;
     }
 
-    let progress = await prisma.teamChallengeProgress.findUnique({
-      where: { teamId_challengeId: { teamId, challengeId: challenge.id } },
-    });
-
-    if (!progress || progress.status === 'LOCKED') {
-      const team = await prisma.team.findUnique({ where: { id: teamId } });
-      if (team) {
-        const routeCodes = getTeamPhysicalRoute(team.routeIndex);
-        const stepIndex = routeCodes.indexOf(challenge.code as any);
-        let canActivate = false;
-        if (stepIndex === 0) {
-          canActivate = true;
-        } else if (stepIndex > 0) {
-          const prevCode = routeCodes[stepIndex - 1];
-          const prevChallenge = await prisma.challenge.findUnique({ where: { code: prevCode } });
-          const prevProg = prevChallenge
-            ? await prisma.teamChallengeProgress.findUnique({
-                where: { teamId_challengeId: { teamId, challengeId: prevChallenge.id } },
-              })
-            : null;
-          if (prevProg && FINISHED_STATUSES.includes(prevProg.status)) {
-            canActivate = true;
-          }
-        }
-
-        if (canActivate) {
-          progress = await prisma.teamChallengeProgress.upsert({
-            where: { teamId_challengeId: { teamId, challengeId: challenge.id } },
-            update: { status: 'ACTIVE', startedAt: new Date() },
-            create: { teamId, challengeId: challenge.id, status: 'ACTIVE', startedAt: new Date() },
-          });
-        }
-      }
-    }
+    const progress = await getUnlockedPhysicalProgress(teamId, challenge);
 
     if (!progress || progress.status === 'LOCKED') {
       res.status(403).json({ success: false, error: 'This physical challenge is not unlocked yet.' });
@@ -331,7 +400,7 @@ router.post('/:id/submit-riddle', requireTeam, async (req: AuthenticatedRequest,
 });
 
 // POST /api/physical/:id/submit-flag - Submit physical flag code
-router.post('/:id/submit-flag', requireTeam, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/:id/submit-flag', requireUnlockedTeam, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const teamId = req.user!.id;
     const challengeId = req.params.id;
@@ -532,7 +601,7 @@ router.post('/:id/submit-flag', requireTeam, async (req: AuthenticatedRequest, r
 });
 
 // POST /api/physical/submit-meta - Final meta challenge (CYBER)
-router.post('/submit-meta', requireTeam, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/submit-meta', requireUnlockedTeam, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const teamId = req.user!.id;
 

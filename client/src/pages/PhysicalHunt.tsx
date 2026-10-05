@@ -56,6 +56,25 @@ export const PhysicalHunt: React.FC<PhysicalHuntProps> = ({ onNavigate, event })
     message: string;
   } | null>(null);
 
+  // Hint confirmation
+  const [confirmingHint, setConfirmingHint] = useState<1 | 2 | null>(null);
+  const [isUnlockingHint, setIsUnlockingHint] = useState(false);
+
+  const handleUnlockHint = async (hintNum: 1 | 2) => {
+    if (!activeStep || isUnlockingHint) return;
+    setIsUnlockingHint(true);
+    try {
+      await api.unlockPhysicalHint(activeStep.id, hintNum);
+      setConfirmingHint(null);
+      await fetchHuntData();
+    } catch (err: any) {
+      setConfirmingHint(null);
+      setRiddleFeedback({ type: 'error', message: err.message || 'Could not reveal hint.' });
+    } finally {
+      setIsUnlockingHint(false);
+    }
+  };
+
   const fetchHuntData = async () => {
     try {
       const res = await api.getPhysicalRoute();
@@ -454,6 +473,43 @@ export const PhysicalHunt: React.FC<PhysicalHuntProps> = ({ onNavigate, event })
             </p>
 
             {/* Riddle Submission Form (if not solved) */}
+            {/* Hints (revealing one deducts points from this step's 20) */}
+            {(activeStep.status === 'ACTIVE' || activeStep.hint1Used) && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {([1, 2] as const).map((n) => {
+                  const used = n === 1 ? activeStep.hint1Used : activeStep.hint2Used;
+                  const text = n === 1 ? activeStep.hint1 : activeStep.hint2;
+                  const penalty = n === 1 ? activeStep.hint1Penalty : activeStep.hint2Penalty;
+                  const blocked = n === 2 && !activeStep.hint1Used;
+                  return (
+                    <div key={n} className="p-3 rounded-xl bg-cyber-bg border border-cyber-border space-y-2">
+                      <div className="flex items-center justify-between text-xs font-mono">
+                        <span className="font-bold text-slate-200 flex items-center gap-1.5">
+                          <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
+                          Hint {n}
+                        </span>
+                        <span className="text-amber-400">-{penalty} pts</span>
+                      </div>
+                      {used && text ? (
+                        <p className="text-xs text-amber-200/90 font-mono bg-amber-950/20 p-2 rounded-lg border border-amber-500/30">
+                          {text}
+                        </p>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={blocked || activeStep.status !== 'ACTIVE' || event?.status !== 'RUNNING'}
+                          onClick={() => setConfirmingHint(n)}
+                          className="w-full py-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-mono text-xs font-semibold transition disabled:opacity-40"
+                        >
+                          {blocked ? 'Unlock Hint 1 First' : `Reveal Hint ${n} (-${penalty} pts)`}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             {activeStep.status === 'FAILED' && (
               <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center gap-2.5 text-rose-300 font-mono text-xs">
                 <XCircle className="w-4 h-4 shrink-0" />
@@ -736,6 +792,41 @@ export const PhysicalHunt: React.FC<PhysicalHuntProps> = ({ onNavigate, event })
           </form>
         )}
       </div>
+      {/* Hint Confirmation Dialog */}
+      {confirmingHint && activeStep && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
+          <div className="max-w-sm w-full p-6 rounded-2xl bg-cyber-surface border border-amber-500/40 space-y-4 text-center">
+            <div className="w-12 h-12 mx-auto rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+              <Lightbulb className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-mono font-bold text-white text-base">CONFIRM HINT {confirmingHint} REVEAL?</h3>
+              <p className="text-xs text-slate-300">
+                Revealing Hint {confirmingHint} will deduct{' '}
+                <span className="text-amber-400 font-bold">
+                  {confirmingHint === 1 ? activeStep.hint1Penalty : activeStep.hint2Penalty} points
+                </span>{' '}
+                from this step's flag points.
+              </p>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => setConfirmingHint(null)}
+                className="flex-1 py-2.5 rounded-xl bg-cyber-card border border-cyber-border text-xs text-slate-300 font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleUnlockHint(confirmingHint)}
+                disabled={isUnlockingHint}
+                className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-mono font-bold text-xs"
+              >
+                {isUnlockingHint ? 'Unlocking...' : 'Yes, Deduct Points'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

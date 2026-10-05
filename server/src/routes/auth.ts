@@ -10,13 +10,25 @@ import { AuthenticatedRequest } from '../types';
 
 const router = Router();
 
+// PRN = college roll number. Letters/digits, normalised to uppercase.
+const prnSchema = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .regex(/^[A-Z0-9]{4,20}$/, 'PRN must be 4-20 letters or digits');
+
+const memberSchema = z.object({
+  name: z.string().trim().min(2, 'Each member name must be at least 2 characters'),
+  prn: prnSchema,
+});
+
 const registerSchema = z.object({
   teamName: z.string().trim().min(2, 'Team name must be at least 2 characters'),
-  captainName: z.string().trim().min(2, 'Captain name must be at least 2 characters'),
-  memberNames: z.union([
-    z.array(z.string().trim().min(1)),
-    z.string().transform((val) => val.split(',').map((s) => s.trim()).filter(Boolean)),
-  ]),
+  // members[0] is the captain
+  members: z
+    .array(memberSchema)
+    .min(1, 'Captain details are required')
+    .max(4, 'A team can have at most 4 members'),
   email: z.string().trim().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
@@ -43,7 +55,26 @@ router.post('/register-team', async (req: Request, res: Response) => {
       return;
     }
 
-    const { teamName, captainName, memberNames, email, password } = parseResult.data;
+    const { teamName, members, email, password } = parseResult.data;
+    const captainName = members[0].name;
+
+    // One PRN per student: no duplicates inside the team or across teams
+    const prns = members.map((m) => m.prn);
+    if (new Set(prns).size !== prns.length) {
+      res.status(400).json({ success: false, error: 'Each member must have a different PRN.' });
+      return;
+    }
+    const prnTaken = await prisma.teamMember.findFirst({
+      where: { prn: { in: prns } },
+      include: { team: { select: { teamName: true } } },
+    });
+    if (prnTaken) {
+      res.status(409).json({
+        success: false,
+        error: `PRN ${prnTaken.prn} is already registered with team "${prnTaken.team.teamName}".`,
+      });
+      return;
+    }
 
     // Check duplicate team name or email
     const existingTeam = await prisma.team.findFirst({
@@ -96,15 +127,9 @@ router.post('/register-team', async (req: Request, res: Response) => {
     }
 
     // Create members
-    const membersToCreate = Array.from(new Set([captainName, ...memberNames]));
-    for (const name of membersToCreate) {
-      await prisma.teamMember.create({
-        data: {
-          teamId: team.id,
-          name,
-        },
-      });
-    }
+    await prisma.teamMember.createMany({
+      data: members.map((m) => ({ teamId: team!.id, name: m.name, prn: m.prn })),
+    });
 
     // Initialize challenge progress for all existing challenges
     const allChallenges = await prisma.challenge.findMany();
@@ -224,6 +249,8 @@ router.post('/login', async (req: Request, res: Response) => {
         onlineScore: team.onlineScore,
         physicalScore: team.physicalScore,
         metaCompleted: team.metaCompleted,
+        violationCount: team.violationCount,
+        isLocked: team.isLocked,
         members: team.members.map((m) => m.name),
       },
     });
@@ -328,6 +355,8 @@ router.get('/me', authenticateJwt, async (req: AuthenticatedRequest, res: Respon
         onlineScore: team.onlineScore,
         physicalScore: team.physicalScore,
         metaCompleted: team.metaCompleted,
+        violationCount: team.violationCount,
+        isLocked: team.isLocked,
         members: team.members.map((m) => m.name),
       },
     });

@@ -11,6 +11,7 @@ import challengesRoutes from './routes/challenges';
 import physicalRoutes from './routes/physical';
 import leaderboardRoutes from './routes/leaderboard';
 import adminRoutes from './routes/admin';
+import integrityRoutes from './routes/integrity';
 
 const app = express();
 
@@ -64,6 +65,7 @@ const submitLimiter = rateLimit({
 app.use('/api/challenges/:id/submit', submitLimiter);
 app.use('/api/physical/:id/submit-riddle', submitLimiter);
 app.use('/api/physical/:id/submit-flag', submitLimiter);
+app.use('/api/integrity/violation', submitLimiter);
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -72,6 +74,7 @@ app.use('/api/challenges', challengesRoutes);
 app.use('/api/physical', physicalRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/integrity', integrityRoutes);
 
 // Health check
 app.get('/health', (_req: Request, res: Response) => {

@@ -134,7 +134,8 @@ export const OnlineChallenges: React.FC<OnlineChallengesProps> = ({ onNavigate, 
         await fetchChallenges();
       }
     } catch (err: any) {
-      alert(err.message || 'Could not reveal hint.');
+      setConfirmingHint(null);
+      setSubmitFeedback({ type: 'error', message: err.message || 'Could not reveal hint.' });
     } finally {
       setIsUnlockingHint(false);
     }

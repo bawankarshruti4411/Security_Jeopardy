@@ -64,7 +64,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         api.getAdminPhysicalFlags(),
       ]);
 
-      if (ov.success) setOverviewData(ov.overview);
+      if (ov.success && ov.stats) {
+        setOverviewData({
+          totalTeams: ov.stats.totalTeams,
+          totalSolves: ov.stats.correctSubmissions,
+          physicalFlagsCaptured: ov.stats.totalPhysicalCaptured,
+          totalSubmissions: ov.stats.totalSubmissions,
+        });
+      }
       if (tm.success) setTeamsData(tm.teams);
       if (sb.success) setSubmissionsData(sb.submissions);
       if (ch.success) setChallengesData(ch.challenges);
@@ -78,7 +85,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   useEffect(() => {
     loadData();
+    // Auto-refresh so new registrations, submissions and locked teams appear live
+    const interval = setInterval(loadData, 10000);
+    return () => clearInterval(interval);
   }, [role]);
+
+  const handleUnlockTeam = async (teamId: string, teamCode: string) => {
+    if (!confirm(`Unlock ${teamCode}? Their violation counter resets to 0 (history is kept).`)) return;
+    try {
+      await api.unlockTeam(teamId);
+      await loadData();
+    } catch (err: any) {
+      alert(err.message || 'Failed to unlock team.');
+    }
+  };
 
   // Event Control Handlers
   const handleStart = async () => {
@@ -476,11 +496,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <tr className="border-b border-cyber-border text-slate-400 text-[11px]">
                   <th className="py-2.5 px-3">Team Code</th>
                   <th className="py-2.5 px-3">Team Name</th>
-                  <th className="py-2.5 px-3">Captain</th>
+                  <th className="py-2.5 px-3">Members (PRN)</th>
                   <th className="py-2.5 px-3">Route Index</th>
                   <th className="py-2.5 px-3">Online Pts</th>
                   <th className="py-2.5 px-3">Physical Pts</th>
                   <th className="py-2.5 px-3">Total Score</th>
+                  <th className="py-2.5 px-3">Tab Violations</th>
                   <th className="py-2.5 px-3 text-right">Actions</th>
                 </tr>
               </thead>
@@ -489,21 +510,54 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   .filter(
                     (t) =>
                       t.teamCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      t.teamName.toLowerCase().includes(searchTerm.toLowerCase())
+                      t.teamName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      (t.memberDetails || []).some((m: any) =>
+                        `${m.name} ${m.prn || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
+                      )
                   )
                   .map((t) => (
-                    <tr key={t.id} className="hover:bg-cyber-card/50">
+                    <tr key={t.id} className={t.isLocked ? 'bg-rose-950/30' : 'hover:bg-cyber-card/50'}>
                       <td className="py-3 px-3 font-bold text-cyan-400">{t.teamCode}</td>
                       <td className="py-3 px-3 font-bold text-white">{t.teamName}</td>
-                      <td className="py-3 px-3 text-slate-300">{t.captainName}</td>
+                      <td className="py-3 px-3 text-slate-300">
+                        {(t.memberDetails || []).map((m: any, i: number) => (
+                          <div key={i} className="whitespace-nowrap">
+                            {m.name}
+                            {i === 0 && <span className="text-amber-400"> (C)</span>}{' '}
+                            <span className="text-slate-500">{m.prn || '-'}</span>
+                          </div>
+                        ))}
+                      </td>
                       <td className="py-3 px-3 text-purple-300">Route #{t.routeIndex + 1}</td>
                       <td className="py-3 px-3 text-cyan-300">{t.onlineScore}</td>
                       <td className="py-3 px-3 text-purple-300">{t.physicalScore}</td>
                       <td className="py-3 px-3 font-black text-slate-100">{t.score}</td>
-                      <td className="py-3 px-3 text-right">
-                        <span className="text-[11px] text-slate-400">
-                          {t.completedCount} solved
-                        </span>
+                      <td className="py-3 px-3">
+                        <div
+                          className={t.violationCount > 0 || t.isLocked ? 'text-rose-400 font-bold' : 'text-slate-500'}
+                          title={(t.violations || [])
+                            .map((v: any) => `${new Date(v.createdAt).toLocaleTimeString()}  ${v.type}`)
+                            .join(', ')}
+                        >
+                          {t.isLocked ? 'LOCKED' : `${t.violationCount} / 3`}
+                        </div>
+                        {(t.violations || []).length > 0 && (
+                          <div className="text-[10px] text-slate-500">
+                            {t.violations.length} logged &middot; last{' '}
+                            {new Date(t.violations[t.violations.length - 1].createdAt).toLocaleTimeString()}
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-3 px-3 text-right space-y-1">
+                        {t.isLocked && (
+                          <button
+                            onClick={() => handleUnlockTeam(t.id, t.teamCode)}
+                            className="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold"
+                          >
+                            Unlock
+                          </button>
+                        )}
+                        <div className="text-[11px] text-slate-400">{t.completedCount} solved</div>
                       </td>
                     </tr>
                   ))}

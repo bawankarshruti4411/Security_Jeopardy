@@ -45,10 +45,13 @@ model Team {
   metaCompleted   Boolean                 @default(false)
   metaCompletedAt DateTime?
   lastSolveAt     DateTime?
+  violationCount  Int                     @default(0) // tab switches / fullscreen exits during the event
+  isLocked        Boolean                 @default(false) // locked after 3 violations until an admin unlocks
   createdAt       DateTime                @default(now())
   updatedAt       DateTime                @updatedAt
 
   members         TeamMember[]
+  violations      Violation[]
   progress        TeamChallengeProgress[]
   submissions     Submission[]
   physicalFlags   PhysicalFlag[]
@@ -58,9 +61,21 @@ model TeamMember {
   id        String   @id @default(cuid())
   teamId    String
   name      String
+  prn       String?  // college roll number (PRN)
   createdAt DateTime @default(now())
 
   team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+}
+
+model Violation {
+  id        String   @id @default(cuid())
+  teamId    String
+  type      String   // TAB_HIDDEN, WINDOW_BLUR, FULLSCREEN_EXIT
+  createdAt DateTime @default(now())
+
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId])
 }
 
 model Challenge {

@@ -240,6 +240,7 @@ router.get('/teams', async (_req: AuthenticatedRequest, res: Response) => {
           include: { challenge: true },
         },
         physicalFlags: true,
+        violations: { orderBy: { createdAt: 'asc' } },
       },
       orderBy: { teamCode: 'asc' },
     });
@@ -264,6 +265,10 @@ router.get('/teams', async (_req: AuthenticatedRequest, res: Response) => {
         routeIndex: t.routeIndex,
         route,
         members: t.members.map((m) => m.name),
+        memberDetails: t.members.map((m) => ({ name: m.name, prn: m.prn })),
+        violationCount: t.violationCount,
+        isLocked: t.isLocked,
+        violations: t.violations.map((v) => ({ type: v.type, createdAt: v.createdAt })),
         capturedFlags,
         completedChallenges,
         flags: t.physicalFlags.map((f) => ({
@@ -288,6 +293,20 @@ router.get('/teams', async (_req: AuthenticatedRequest, res: Response) => {
     res.json({ success: true, teams: formatted });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Failed to fetch teams.' });
+  }
+});
+
+// Unlock a team that was locked for tab switching. Resets the counter (so they get
+// 3 more chances) but keeps the violation history.
+router.post('/teams/:teamId/unlock', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const team = await prisma.team.update({
+      where: { id: req.params.teamId },
+      data: { isLocked: false, violationCount: 0 },
+    });
+    res.json({ success: true, message: `Team ${team.teamCode} unlocked.` });
+  } catch (err) {
+    res.status(404).json({ success: false, error: 'Team not found.' });
   }
 });
 

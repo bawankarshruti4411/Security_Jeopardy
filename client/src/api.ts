@@ -78,13 +78,36 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ flagCode }),
     }),
+  unlockPhysicalHint: (challengeId: string, hintNumber: 1 | 2) =>
+    request<any>(`/physical/${challengeId}/hint`, {
+      method: 'POST',
+      body: JSON.stringify({ hintNumber }),
+    }),
   submitFinalMeta: (answer: string) =>
     request<any>('/physical/submit-meta', {
       method: 'POST',
       body: JSON.stringify({ answer }),
     }),
 
+  // Competition integrity (tab switching / fullscreen)
+  getIntegrityStatus: () =>
+    request<{ success: boolean; violationCount: number; isLocked: boolean; maxViolations: number }>(
+      '/integrity/status'
+    ),
+  reportViolation: (type: 'TAB_HIDDEN' | 'WINDOW_BLUR' | 'FULLSCREEN_EXIT') =>
+    request<{
+      success: boolean;
+      counted: boolean;
+      violationCount: number;
+      isLocked: boolean;
+      maxViolations: number;
+    }>('/integrity/violation', {
+      method: 'POST',
+      body: JSON.stringify({ type }),
+    }),
+
   // Admin
+  unlockTeam: (teamId: string) => request<any>(`/admin/teams/${teamId}/unlock`, { method: 'POST' }),
   getAdminOverview: () => request<any>('/admin/overview'),
   startEvent: (durationMinutes?: number) =>
     request<any>('/admin/event/start', {

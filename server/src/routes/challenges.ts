@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { Challenge, TeamChallengeProgress } from '@prisma/client';
 import { prisma } from '../prisma';
 import { requireTeam } from '../middleware/auth';
+import { requireUnlockedTeam } from './integrity';
 import { AuthenticatedRequest } from '../types';
 import { getActiveEvent, computeEventSummary } from '../utils/eventHelper';
 import { isAnswerCorrect } from '../utils/answerChecker';
@@ -162,7 +163,7 @@ router.get('/', requireTeam, async (req: AuthenticatedRequest, res: Response) =>
 });
 
 // POST /api/challenges/:id/hint - Request Hint 1 or Hint 2
-router.post('/:id/hint', requireTeam, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/:id/hint', requireUnlockedTeam, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const teamId = req.user!.id;
     const challengeId = req.params.id;
@@ -246,7 +247,7 @@ router.post('/:id/hint', requireTeam, async (req: AuthenticatedRequest, res: Res
 });
 
 // POST /api/challenges/:id/submit - Submit answer to an online challenge
-router.post('/:id/submit', requireTeam, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/:id/submit', requireUnlockedTeam, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const teamId = req.user!.id;
     const challengeId = req.params.id;

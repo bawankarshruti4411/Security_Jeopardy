@@ -11,10 +11,10 @@ export const Register: React.FC<RegisterProps> = ({ onNavigate }) => {
   const { loginAsTeam } = useAuth();
 
   const [teamName, setTeamName] = useState('');
-  const [captainName, setCaptainName] = useState('');
-  const [member2, setMember2] = useState('');
-  const [member3, setMember3] = useState('');
-  const [member4, setMember4] = useState('');
+  // members[0] is the captain; members 2-4 are optional
+  const [members, setMembers] = useState(
+    Array.from({ length: 4 }, () => ({ name: '', prn: '' }))
+  );
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -28,8 +28,33 @@ export const Register: React.FC<RegisterProps> = ({ onNavigate }) => {
     e.preventDefault();
     setError(null);
 
-    if (!teamName.trim() || !captainName.trim() || !email.trim() || !password) {
+    const captain = members[0];
+    if (!teamName.trim() || !captain.name.trim() || !captain.prn.trim() || !email.trim() || !password) {
       setError('Please fill in all mandatory fields.');
+      return;
+    }
+
+    // Optional members: name and PRN must be given together
+    for (let i = 1; i < members.length; i++) {
+      const hasName = !!members[i].name.trim();
+      const hasPrn = !!members[i].prn.trim();
+      if (hasName !== hasPrn) {
+        setError(`Member ${i + 1}: enter both the name and the PRN (or leave both empty).`);
+        return;
+      }
+    }
+
+    const filledMembers = members
+      .filter((m) => m.name.trim() && m.prn.trim())
+      .map((m) => ({ name: m.name.trim(), prn: m.prn.trim().toUpperCase() }));
+
+    const invalidPrn = filledMembers.find((m) => !/^[A-Z0-9]{4,20}$/.test(m.prn));
+    if (invalidPrn) {
+      setError(`PRN "${invalidPrn.prn}" is invalid. Use 4-20 letters or digits, no spaces.`);
+      return;
+    }
+    if (new Set(filledMembers.map((m) => m.prn)).size !== filledMembers.length) {
+      setError('Each member must have a different PRN.');
       return;
     }
 
@@ -38,16 +63,11 @@ export const Register: React.FC<RegisterProps> = ({ onNavigate }) => {
       return;
     }
 
-    const memberNames = [captainName.trim(), member2.trim(), member3.trim(), member4.trim()].filter(
-      Boolean
-    );
-
     setIsLoading(true);
     try {
       const res = await api.registerTeam({
         teamName: teamName.trim(),
-        captainName: captainName.trim(),
-        memberNames,
+        members: filledMembers,
         email: email.trim(),
         password,
       });
@@ -63,6 +83,10 @@ export const Register: React.FC<RegisterProps> = ({ onNavigate }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const updateMember = (index: number, field: 'name' | 'prn', value: string) => {
+    setMembers((prev) => prev.map((m, i) => (i === index ? { ...m, [field]: value } : m)));
   };
 
   const copyToClipboard = () => {
@@ -148,50 +172,36 @@ export const Register: React.FC<RegisterProps> = ({ onNavigate }) => {
             />
           </div>
 
-          {/* Captain Name */}
-          <div className="space-y-1">
-            <label className="text-xs font-mono font-semibold text-slate-300">Captain Name *</label>
-            <input
-              type="text"
-              required
-              value={captainName}
-              onChange={(e) => setCaptainName(e.target.value)}
-              placeholder="Captain Full Name"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-cyber-card border border-cyber-border focus:border-cyan-400 focus:outline-none text-slate-100 text-sm font-sans"
-            />
-          </div>
-
-          {/* Members */}
+          {/* Squad Members: name + PRN (roll number) */}
           <div className="space-y-2 pt-2 border-t border-cyber-border/60">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-mono font-semibold text-slate-300 flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 text-cyan-400" />
-                Additional Squad Members (Optional, up to 4 total)
-              </label>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <input
-                type="text"
-                value={member2}
-                onChange={(e) => setMember2(e.target.value)}
-                placeholder="Member 2"
-                className="px-3 py-2 rounded-lg bg-cyber-card border border-cyber-border focus:border-cyan-400 focus:outline-none text-xs text-slate-200"
-              />
-              <input
-                type="text"
-                value={member3}
-                onChange={(e) => setMember3(e.target.value)}
-                placeholder="Member 3"
-                className="px-3 py-2 rounded-lg bg-cyber-card border border-cyber-border focus:border-cyan-400 focus:outline-none text-xs text-slate-200"
-              />
-              <input
-                type="text"
-                value={member4}
-                onChange={(e) => setMember4(e.target.value)}
-                placeholder="Member 4"
-                className="px-3 py-2 rounded-lg bg-cyber-card border border-cyber-border focus:border-cyan-400 focus:outline-none text-xs text-slate-200"
-              />
-            </div>
+            <label className="text-xs font-mono font-semibold text-slate-300 flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5 text-cyan-400" />
+              Squad Members (Captain required, up to 4 total)
+            </label>
+            {members.map((m, i) => (
+              <div key={i} className="grid grid-cols-1 sm:grid-cols-[1fr_9.5rem] gap-2">
+                <input
+                  type="text"
+                  required={i === 0}
+                  value={m.name}
+                  onChange={(e) => updateMember(i, 'name', e.target.value)}
+                  placeholder={i === 0 ? 'Captain Full Name *' : `Member ${i + 1} Name (optional)`}
+                  className="px-3 py-2.5 rounded-xl bg-cyber-card border border-cyber-border focus:border-cyan-400 focus:outline-none text-slate-100 text-sm"
+                />
+                <input
+                  type="text"
+                  required={i === 0}
+                  value={m.prn}
+                  onChange={(e) => updateMember(i, 'prn', e.target.value.toUpperCase())}
+                  placeholder={i === 0 ? 'Captain PRN *' : 'PRN'}
+                  maxLength={20}
+                  className="px-3 py-2.5 rounded-xl bg-cyber-card border border-cyber-border focus:border-cyan-400 focus:outline-none text-slate-100 text-sm font-mono uppercase placeholder:normal-case"
+                />
+              </div>
+            ))}
+            <p className="text-[10px] text-slate-500">
+              PRN = college roll number. Each student can be registered in only one team.
+            </p>
           </div>
 
           {/* Captain Email */}
