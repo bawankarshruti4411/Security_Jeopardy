@@ -57,10 +57,8 @@ Club Coordinator: **Shruti Bawankar**
 
 ### Final Meta Cipher Mission
 
-Once a squad captures all 5 physical flags, the fragments:
-$$\mathbf{C} + \mathbf{Y} + \mathbf{B} + \mathbf{E} + \mathbf{R}$$
-unlock the Final Meta Terminal. The team enters the master keyword:
-$$\mathbf{CYBER}$$
+Once a squad captures all 5 physical flags,
+unlock the Final Meta Terminal. The team enters the master keyword
 to achieve full mission completion.
 
 ---
